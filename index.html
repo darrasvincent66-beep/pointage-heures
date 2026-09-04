@@ -28,7 +28,7 @@ nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);
 </head>
 <body>
 <div class="app">
-<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.5</span></header>
+<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.3</span></header>
 
 <section id="tabHome">
 <div class="card"><h2>Pointage du jour</h2><div class="muted" id="dateLabel"></div>
@@ -80,31 +80,18 @@ function fmtMin(min){min=Math.round(min||0);let sign=min<0?"-":"";min=Math.abs(m
 function day(d){return data[d]||{type:"work",amStart:"",amEnd:"",pmStart:"",pmEnd:"",compHours:0}}
 function put(d,x){data[d]=x;localStorage.setItem(KEY,JSON.stringify(data))}
 function worked(x){if((x.type||"work")!=="work")return 0;let a=timeMin(x.amStart),b=timeMin(x.amEnd),c=timeMin(x.pmStart),e=timeMin(x.pmEnd);return a!=null&&b!=null&&c!=null&&e!=null?(b-a)+(e-c):0}
-function weekInfo(start){
-  const end=iso(addDays(parseISO(start),4));
-  let worked=0;
-  for(const d of range(start,end)) worked+=day(d).type==="leave"||day(d).type==="absence"||day(d).type==="holiday"?0:worked(d);
-  // Weekly overtime remains the amount above 35h for display.
-  const extra=Math.max(0,worked-35*60);
-  return {start,end,worked,extra};
-}
-function weekExtraForPeriod(start,from,to){
-  const end=iso(addDays(parseISO(start),4));
-  const days=range(start,end);
-  let cumulative=0, periodExtra=0;
-  for(const d of days){
-    const mins=worked(day(d));
-    const before=Math.max(0,cumulative-35*60);
-    const after=Math.max(0,cumulative+mins-35*60);
-    const extraForDay=Math.max(0,after-before);
-    if(d>=from && d<=to) periodExtra+=extraForDay;
-    cumulative+=mins;
-  }
-  return periodExtra;
-}
+function weekInfo(start){let ds=weekDates(start),w=ds.reduce((s,d)=>s+worked(day(d)),0);return{start:monday(start),end:addDays(monday(start),4),worked:w,normal:Math.min(w,2100),extra:Math.max(0,w-2100)}}
+function isoWeekNumber(s){let d=new Date(s+"T12:00:00");d.setDate(d.getDate()+3-(d.getDay()+6)%7);let y=d.getFullYear(),w1=new Date(y,0,4);return 1+Math.round(((d-w1)/86400000-3+(w1.getDay()+6)%7)/7)}
+function typeLabel(t){return({work:"Travail",leave:"Congé",comp:"Repos compensatoire",absence:"Absence",holiday:"Jour férié"})[t]||t}
+function typePill(t){return `<span class="pill ${t||"work"}">${typeLabel(t||"work")}</span>`}
+function showTab(t){["home","history","summary"].forEach(x=>document.getElementById("tab"+x[0].toUpperCase()+x.slice(1)).classList.toggle("hidden",x!==t));if(t==="history")renderHistory();if(t==="summary")renderSummary()}
+function stamp(k){let d=today(),x=day(d);x.type="work";x[k]=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});put(d,x);renderAll()}
+function renderHome(){let d=today(),x=day(d),dt=new Date(d+"T12:00:00");document.getElementById("todayText").textContent=dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});document.getElementById("dateLabel").textContent=dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});document.getElementById("todayTimes").innerHTML=typePill(x.type)+`<div class="row"><span>Début matin</span><b>${x.amStart||"—"}</b></div><div class="row"><span>Fin matin</span><b>${x.amEnd||"—"}</b></div><div class="row"><span>Début après-midi</span><b>${x.pmStart||"—"}</b></div><div class="row"><span>Fin journée</span><b>${x.pmEnd||"—"}</b></div>`+`<div style="text-align:right;margin-top:10px"><button onclick="openEdit('${d}')">✏️ Modifier</button></div>`;
+let wi=weekInfo(monday(d)),mi=monthInfo(dt.getFullYear(),dt.getMonth()+1);document.getElementById("weekLabel").textContent=`Semaine ${isoWeekNumber(wi.start)} · ${wi.start} au ${wi.end}`;document.getElementById("weekStats").innerHTML=stat("Travaillées",wi.worked)+stat("Normales",wi.normal)+stat("Sup.",wi.extra);document.getElementById("monthStats").innerHTML=stat("Travaillées",mi.worked)+stat("Sup.",mi.extra)+stat("Congés",mi.leave,"j")}
+function stat(label,value,suffix=""){return `<div class="stat"><b>${suffix==="j"?value+suffix:fmtMin(value)}</b><span class="muted">${label}</span></div>`}
 function monthInfo(y,m){
   const from=`${y}-${pad(m)}-01`, to=iso(new Date(y,m,0));
-  let workedTotal=0, leave=0, absence=0, comp=0;
+  let workedTotal=0, leave=0, absence=0, comp=0, extra=0;
   for(const d of range(from,to)){
     const x=day(d);
     workedTotal += worked(x);
@@ -112,13 +99,22 @@ function monthInfo(y,m){
     if(x.type==="absence") absence++;
     comp += Number(x.compHours||0);
   }
-  let extra=0,cur=monday(from);
-  while(cur<=to){
-    const wi=weekInfo(cur);
-    extra += weekExtraForPeriod(cur,from,to);
-    cur=addDays(cur,7);
-  }
+  let cur=monday(from);
+  while(cur<=to){ extra += periodWeekExtra(cur,from,to); cur=addDays(cur,7); }
   return {worked:workedTotal,extra,normal:Math.max(0,workedTotal-extra),leave,absence,comp};
+}
+function periodWeekExtra(start,from,to){
+  const ds=weekDates(start);
+  let cumulative=0, extra=0;
+  for(const d of ds){
+    const mins=worked(day(d));
+    const before=Math.max(0,cumulative-2100);
+    const after=Math.max(0,cumulative+mins-2100);
+    const dayExtra=Math.max(0,after-before);
+    if(d>=from && d<=to) extra+=dayExtra;
+    cumulative+=mins;
+  }
+  return extra;
 }
 function rowActions(d,x){return `<div class="actions"><button class="small" onclick="setType('${d}','leave')">🏖️ Congé</button><button class="small" onclick="setType('${d}','comp')">💤 Repos comp.</button><button class="small" onclick="setType('${d}','absence')">🚫 Absence</button><button class="small" onclick="setType('${d}','holiday')">🎉 Férié</button><button class="small" onclick="setType('${d}','work')">🕐 Travail</button><button class="small" onclick="copyDay('${d}')">📋 Copier horaires</button>${clipboardDay?`<button class="small primary" onclick="pasteDay('${d}')">📥 Coller horaires</button>`:""}<button class="small" onclick="openEdit('${d}')">✏️ Modifier</button></div>`}
 function renderHistory(){let v=document.getElementById("historyMonth").value;if(!v){let d=new Date();v=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;document.getElementById("historyMonth").value=v}let [y,m]=v.split("-").map(Number),from=`${y}-${pad(m)}-01`,to=iso(new Date(y,m,0));
@@ -148,37 +144,33 @@ function renderSummary(){
   let workedTotal=0,leave=0,absence=0,comp=0;
   for(const x of range(from,to)){
     const z=day(x);
-    workedTotal += worked(z);
+    workedTotal+=worked(z);
     if(z.type==="leave") leave++;
     if(z.type==="absence") absence++;
-    comp += Number(z.compHours||0);
+    comp+=Number(z.compHours||0);
   }
 
   let weeks=[],cur=monday(from);
   while(cur<=to){
-    const wi=weekInfo(cur);
-    const periodWorked=range(cur,wi.end).reduce((s,d)=>s+((d>=from&&d<=to)?worked(day(d)):0),0);
-    const periodExtra=weekExtraForPeriod(cur,from,to);
-    if(wi.end>=from && wi.start<=to){
-      weeks.push({...wi,periodWorked,periodExtra});
+    const end=addDays(cur,4);
+    if(end>=from && cur<=to){
+      const periodWorked=range(cur,end).reduce((sum,d)=>sum+(d>=from&&d<=to?worked(day(d)):0),0);
+      const periodExtra=periodWeekExtra(cur,from,to);
+      weeks.push({start:cur,end,worked:periodWorked,extra:periodExtra});
     }
     cur=addDays(cur,7);
   }
+  const extra=weeks.reduce((sum,w)=>sum+w.extra,0);
 
-  const extra=weeks.reduce((s,w)=>s+w.periodExtra,0);
-
-  let h=`<div class="statgrid" style="margin-top:12px;grid-template-columns:repeat(4,1fr)">
+  let h=`<div class="statgrid" style="margin-top:12px;grid-template-columns:repeat(4,minmax(0,1fr))">
     ${stat("Travaillées",workedTotal)}
     ${stat("Heures sup.",extra)}
-    ${stat("Congés pris",leave*24*60,"j")}
+    <div class="stat"><b>${leave} j</b><span class="muted">Congés pris</span></div>
     ${stat("Repos utilisé",comp*60)}
-  </div>
-  <div style="margin-top:15px"><h3>Semaines</h3>`;
+  </div><div style="margin-top:15px"><h3>Semaines</h3>`;
 
   for(const w of weeks){
-    const cross = w.start<from || w.end>to;
-    const note = cross ? ` <span class="muted">(${fmtMin(w.periodWorked)} dans la période)</span>` : "";
-    h+=`<div class="row"><span><b>S${isoWeekNumber(w.start)}</b> · ${w.start} → ${w.end}${note}</span><b>${fmtMin(w.periodWorked)} · ${fmtMin(w.periodExtra)} sup.</b></div>`;
+    h+=`<div class="row"><span><b>S${isoWeekNumber(w.start)}</b> · ${w.start} → ${w.end}</span><b>${fmtMin(w.worked)} · ${fmtMin(w.extra)} sup.</b></div>`;
   }
   h+=`</div>`;
   document.getElementById("summaryContent").innerHTML=h;
