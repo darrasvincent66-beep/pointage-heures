@@ -1,167 +1,100 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
-<link rel="manifest" href="manifest.json">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json">
 <title>Pointage Heures</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#0f172a;background:#f1f5f9}
-*{box-sizing:border-box}body{margin:0}.app{max-width:760px;margin:auto;padding:18px 14px 40px}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-h1{font-size:24px;margin:0}.muted{color:#64748b;font-size:13px}
-.card{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #0000000b}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:650;background:#e2e8f0;color:#0f172a}
-button.primary{background:#0f172a;color:white}.danger{color:#b91c1c}
-button:active{transform:scale(.99)}
+*{box-sizing:border-box}body{margin:0}.app{max-width:820px;margin:auto;padding:18px 14px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}h1{font-size:24px;margin:0}h2{margin:0 0 12px}.muted{color:#64748b;font-size:13px}
+.card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #0000000b}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:650;background:#e2e8f0;color:#0f172a}button.primary{background:#0f172a;color:#fff}
+button:active{transform:scale(.99)}input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font-size:16px}
+label{font-size:13px;color:#475569;display:block;margin-bottom:5px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{padding:12px;background:#f8fafc;border-radius:12px;text-align:center}.stat b{display:block;font-size:20px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #e2e8f0}.row:last-child{border-bottom:0}
-input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;font-size:16px}
-label{font-size:13px;color:#475569;display:block;margin-bottom:5px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);padding:7px;border-radius:16px;box-shadow:0 4px 20px #0002;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}
-nav button{padding:11px 5px;font-size:13px}
-.hidden{display:none}.pill{display:inline-block;background:#e2e8f0;border-radius:999px;padding:5px 9px;font-size:12px}
-.small{font-size:12px}.success{color:#166534}.warning{color:#92400e}
-.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;justify-content:center;padding:10px;z-index:5}
-.modalbox{background:white;border-radius:20px;padding:18px;width:min(720px,100%);max-height:92vh;overflow:auto}
-@media(min-width:650px){.modal{align-items:center}.app{padding-top:28px}}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #e2e8f0}.row:last-child{border-bottom:0}
+nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);padding:7px;border-radius:16px;box-shadow:0 4px 20px #0002;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}nav button{padding:11px 5px;font-size:13px}
+.hidden{display:none!important}.pill{display:inline-block;background:#e2e8f0;border-radius:999px;padding:5px 9px;font-size:12px}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:12px;z-index:5}.modalbox{background:#fff;border-radius:20px;padding:18px;width:min(720px,100%);max-height:92vh;overflow:auto}
+.notice{padding:10px;border-radius:12px;background:#f8fafc;margin-top:10px;font-size:13px}.success{color:#166534}.warning{color:#92400e}
+@media(max-width:500px){.grid,.two{grid-template-columns:1fr}.statgrid{grid-template-columns:1fr 1fr 1fr}.stat b{font-size:17px}}
 </style>
 </head>
 <body>
 <div class="app">
-<header><div><h1>Pointage Heures</h1><div class="muted" id="today"></div></div><span class="pill" id="version">v1.0</span></header>
+<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.1</span></header>
 
-<section id="home">
-<div class="card">
-<h2>Pointage du jour</h2>
-<div class="muted" id="dateLabel"></div>
+<section id="tabHome">
+<div class="card"><h2>Pointage du jour</h2><div class="muted" id="dateLabel"></div>
 <div class="grid" style="margin-top:12px">
-<button class="primary" onclick="stamp('amStart')">▶ Début matin</button>
-<button onclick="stamp('amEnd')">■ Fin matin</button>
-<button class="primary" onclick="stamp('pmStart')">▶ Début après-midi</button>
-<button onclick="stamp('pmEnd')">■ Fin journée</button>
-</div>
-<div id="todayTimes" style="margin-top:12px"></div>
-</div>
-<div class="card"><h2>Cette semaine</h2><div class="statgrid" id="weekStats"></div></div>
-<div class="card"><h2>Ce mois</h2><div class="statgrid" id="monthStats"></div></div>
+<button class="primary" onclick="stamp('amStart')">▶ Début matin</button><button onclick="stamp('amEnd')">■ Fin matin</button>
+<button class="primary" onclick="stamp('pmStart')">▶ Début après-midi</button><button onclick="stamp('pmEnd')">■ Fin journée</button>
+</div><div id="todayTimes" style="margin-top:12px"></div></div>
+<div class="card"><h2>Semaine en cours</h2><div id="weekLabel" class="muted"></div><div class="statgrid" id="weekStats" style="margin-top:10px"></div></div>
+<div class="card"><h2>Mois en cours</h2><div class="statgrid" id="monthStats"></div></div>
 </section>
 
-<section id="history" class="hidden">
-<div class="card"><h2>Historique</h2><div class="two"><div><label>Mois</label><input id="historyMonth" type="month" onchange="renderHistory()"></div><div><label>Année</label><input id="historyYear" type="number" min="2020" max="2100" onchange="renderHistory()"></div></div><div id="historyList"></div></div>
-</section>
+<section id="tabHistory" class="hidden"><div class="card"><h2>Historique</h2>
+<div class="two"><div><label>Mois</label><input id="historyMonth" type="month" onchange="renderHistory()"></div><div><label>Recherche date</label><input id="historyDate" type="date" onchange="jumpToDate()"></div></div>
+<div id="historyList"></div></div></section>
 
-<section id="summary" class="hidden">
-<div class="card"><h2>Récapitulatif</h2><div class="two"><div><label>Du</label><input id="sumFrom" type="date"></div><div><label>Au</label><input id="sumTo" type="date"></div></div><button class="primary" style="width:100%;margin-top:10px" onclick="renderSummary()">Actualiser</button><div id="summaryContent"></div></div>
-<div class="card"><h2>Export</h2><p class="muted">La première version exporte un CSV compatible avec Excel.</p><button class="primary" style="width:100%" onclick="exportCSV()">Exporter la période</button></div>
-</section>
+<section id="tabSummary" class="hidden"><div class="card"><h2>Récapitulatif</h2>
+<div class="two"><div><label>Du</label><input id="sumFrom" type="date"></div><div><label>Au</label><input id="sumTo" type="date"></div></div>
+<button class="primary" style="width:100%;margin-top:10px" onclick="renderSummary()">Actualiser</button><div id="summaryContent"></div></div>
+<div class="card"><h2>Données</h2><button style="width:100%;margin-bottom:8px" onclick="exportBackup()">💾 Sauvegarder toutes les données</button>
+<button style="width:100%" onclick="document.getElementById('restoreFile').click()">♻️ Restaurer une sauvegarde</button><input id="restoreFile" type="file" accept=".json,application/json" class="hidden" onchange="restoreBackup(event)">
+<div class="notice">Les horaires et données restent dans le stockage local de ce téléphone. La sauvegarde permet de les récupérer sur un autre appareil.</div></div>
+<div class="card"><h2>Export</h2><p class="muted">Exporte la période sélectionnée dans un fichier CSV lisible par Excel.</p><button class="primary" style="width:100%" onclick="exportCSV()">📊 Exporter la période</button></div></section>
 
-<nav>
-<button onclick="showTab('home')">🏠 Pointage</button>
-<button onclick="showTab('history')">📅 Historique</button>
-<button onclick="showTab('summary')">📊 Récap</button>
-</nav>
+<nav><button onclick="showTab('home')">🏠 Pointage</button><button onclick="showTab('history')">📅 Historique</button><button onclick="showTab('summary')">📊 Récap</button></nav>
 </div>
 
-<div id="editModal" class="modal hidden" onclick="if(event.target===this)closeEdit()">
-<div class="modalbox">
-<h2 id="editTitle">Modifier</h2>
-<input type="hidden" id="editDate">
-<div class="two">
-<div><label>Début matin</label><input id="amStart" type="time"></div>
-<div><label>Fin matin</label><input id="amEnd" type="time"></div>
-<div><label>Début après-midi</label><input id="pmStart" type="time"></div>
-<div><label>Fin journée</label><input id="pmEnd" type="time"></div>
-</div>
-<div style="margin-top:12px"><label>Type de journée</label><select id="dayType"><option value="work">Travail</option><option value="leave">Congé</option><option value="comp">Repos compensatoire</option><option value="absence">Absence</option><option value="holiday">Jour férié</option></select></div>
-<div id="compHoursWrap" class="hidden" style="margin-top:10px"><label>Heures de repos compensatoire utilisées</label><input id="compHours" type="number" min="0" step="0.25" value="0"></div>
+<div id="editModal" class="modal hidden">
+<div class="modalbox"><h2>Modifier la journée</h2><div id="editDateLabel" class="muted"></div><input id="editDate" type="hidden">
+<div class="two" style="margin-top:12px"><div><label>Début matin</label><input id="eAmStart" type="time"></div><div><label>Fin matin</label><input id="eAmEnd" type="time"></div><div><label>Début après-midi</label><input id="ePmStart" type="time"></div><div><label>Fin journée</label><input id="ePmEnd" type="time"></div></div>
+<div style="margin-top:12px"><label>Type de journée</label><select id="eType" onchange="toggleComp()"><option value="work">Travail</option><option value="leave">Congé</option><option value="comp">Repos compensatoire</option><option value="absence">Absence</option><option value="holiday">Jour férié</option></select></div>
+<div id="compWrap" class="hidden" style="margin-top:10px"><label>Repos compensatoire utilisé (heures)</label><input id="eComp" type="number" min="0" step="0.25" value="0"></div>
 <div class="grid" style="margin-top:14px"><button class="primary" onclick="saveEdit()">Enregistrer</button><button onclick="closeEdit()">Annuler</button></div>
 </div></div>
 
 <script>
-const KEY='pointage-heures-data-v1';
-let data=JSON.parse(localStorage.getItem(KEY)||'{}');
-const pad=n=>String(n).padStart(2,'0');
-const iso=d=>{let x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10)};
-const todayISO=()=>iso(new Date());
-function save(){localStorage.setItem(KEY,JSON.stringify(data))}
-function getDay(d){return data[d]||{type:'work',amStart:'',amEnd:'',pmStart:'',pmEnd:'',compHours:0}}
-function setDay(d,v){data[d]=v;save()}
-function fmtHours(min){let sign=min<0?'-':'';min=Math.abs(Math.round(min));return sign+Math.floor(min/60)+'h'+pad(min%60)}
-function timeMin(s){if(!s)return null;let [h,m]=s.split(':').map(Number);return h*60+m}
-function workedMinutes(x){let a=timeMin(x.amStart),b=timeMin(x.amEnd),c=timeMin(x.pmStart),d=timeMin(x.pmEnd);return a!=null&&b!=null&&c!=null&&d!=null?(b-a)+(d-c):0}
-function expectedMinutes(d){let day=new Date(d+'T12:00:00').getDay();return day===0||day===6?0:day===5?420:480}
-function monday(d){let x=new Date(d+'T12:00:00'),day=x.getDay();x.setDate(x.getDate()-(day===0?6:day-1));return iso(x)}
-function addDays(s,n){let d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)}
-function weekDates(d){let m=monday(d);return Array.from({length:5},(_,i)=>addDays(m,i))}
-function rangeDates(from,to){let a=[];for(let d=from;d<=to;d=addDays(d,1))a.push(d);return a}
-function weekInfo(d){
- let ds=weekDates(d), worked=ds.reduce((s,x)=>s+workedMinutes(getDay(x)),0);
- let extra=Math.max(0,worked-2100);
- return {ds,worked,normal:Math.min(worked,2100),extra};
-}
-function monthInfo(y,m){
- let from=`${y}-${pad(m)}-01`, last=new Date(y,m,0).getDate(),to=`${y}-${pad(m)}-${pad(last)}`;
- let worked=0,extra=0,normal=0,comp=0,leave=0,absence=0;
- let weeks={};
- for(let d of rangeDates(from,to)){let x=getDay(d);worked+=workedMinutes(x);comp+=Number(x.compHours||0);if(x.type==='leave')leave++;if(x.type==='absence')absence++}
- // Weekly overtime is assigned to the month in which the ISO workweek ends.
- let cursor=monday(from);
- while(cursor<=to){
-   let end=addDays(cursor,4), wi=weekInfo(cursor);
-   if(end>=from && end<=to) extra+=wi.extra;
-   cursor=addDays(cursor,7);
- }
- normal=worked-extra;
- return {from,to,worked,normal,extra,comp,leave,absence};
-}
-function stamp(field){
- let d=todayISO(),x=getDay(d);
- if(x.type!=='work')x.type='work';
- x[field]=`${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`;
- setDay(d,x);renderAll();
-}
-function showTab(t){for(let id of ['home','history','summary'])document.getElementById(id).classList.toggle('hidden',id!==t);if(t==='history')renderHistory();if(t==='summary')renderSummary()}
-function renderHome(){
- let d=todayISO(),x=getDay(d);document.getElementById('today').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});document.getElementById('dateLabel').textContent=new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
- let labels=[['amStart','Début matin'],['amEnd','Fin matin'],['pmStart','Début après-midi'],['pmEnd','Fin journée']];
- document.getElementById('todayTimes').innerHTML=labels.map(([k,l])=>`<div class="row"><span>${l}</span><b>${x[k]||'—'}</b></div>`).join('')+`<div style="margin-top:10px;text-align:right"><button onclick="openEdit('${d}')">✏️ Modifier / absence</button></div>`;
- let w=weekInfo(d),mi=monthInfo(new Date(d).getFullYear(),new Date(d).getMonth()+1);
- document.getElementById('weekStats').innerHTML=`<div class="stat"><b>${fmtHours(w.worked)}</b><span class="muted">travaillées</span></div><div class="stat"><b>${fmtHours(w.normal)}</b><span class="muted">normales</span></div><div class="stat"><b>${fmtHours(w.extra)}</b><span class="muted">heures sup.</span></div>`;
- document.getElementById('monthStats').innerHTML=`<div class="stat"><b>${fmtHours(mi.worked)}</b><span class="muted">travaillées</span></div><div class="stat"><b>${fmtHours(mi.extra)}</b><span class="muted">heures sup.</span></div><div class="stat"><b>${mi.leave}</b><span class="muted">congés</span></div>`;
-}
-function renderHistory(){
- let v=document.getElementById('historyMonth').value;if(!v){let d=new Date();v=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;document.getElementById('historyMonth').value=v}
- let [y,m]=v.split('-').map(Number),last=new Date(y,m,0).getDate(),html='';
- for(let i=1;i<=last;i++){let d=`${y}-${pad(m)}-${pad(i)}`,x=getDay(d),mins=workedMinutes(x);if(new Date(d+'T12:00:00').getDay()===0||new Date(d+'T12:00:00').getDay()===6)continue;html+=`<div class="row"><div><b>${new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'})}</b><div class="muted">${x.type==='work'?'Travail':x.type==='leave'?'Congé':x.type==='comp'?'Repos compensatoire':x.type==='absence'?'Absence':'Jour férié'}</div></div><div style="text-align:right"><b>${fmtHours(mins)}</b><br><button class="small" onclick="openEdit('${d}')">Modifier</button></div></div>`}
- document.getElementById('historyList').innerHTML=html||'<p class="muted">Aucune donnée.</p>';
-}
-function renderSummary(){
- let d=new Date(),from=document.getElementById('sumFrom').value||`${d.getFullYear()}-01-01`,to=document.getElementById('sumTo').value||todayISO();document.getElementById('sumFrom').value=from;document.getElementById('sumTo').value=to;
- let worked=rangeDates(from,to).reduce((s,x)=>s+workedMinutes(getDay(x)),0),leave=0,absence=0,comp=0;for(let x of rangeDates(from,to)){let z=getDay(x);if(z.type==='leave')leave++;if(z.type==='absence')absence++;comp+=Number(z.compHours||0)}
- let weeks={}, cursor=monday(from);while(cursor<=to){let wi=weekInfo(cursor);weeks[cursor]=wi;cursor=addDays(cursor,7)}
- let html=`<div class="statgrid" style="margin-top:12px"><div class="stat"><b>${fmtHours(worked)}</b><span class="muted">travaillées</span></div><div class="stat"><b>${fmtHours(Object.values(weeks).reduce((s,w)=>s+w.extra,0))}</b><span class="muted">heures sup.</span></div><div class="stat"><b>${fmtHours(comp*60)}</b><span class="muted">repos utilisé</span></div></div><div style="margin-top:15px">`;
- for(let [m,w] of Object.entries(weeks)){let num=Math.ceil((new Date(m+'T12:00:00').getDay()===0?7:new Date(m+'T12:00:00').getDay()+7)/7);html+=`<div class="row"><span>Semaine du ${new Date(m+'T12:00:00').toLocaleDateString('fr-FR')} </span><b>${fmtHours(w.worked)} · ${fmtHours(w.extra)} sup.</b></div>`}
- html+=`</div><p class="muted">Congés : ${leave} jour(s) · Absences : ${absence} jour(s)</p>`;document.getElementById('summaryContent').innerHTML=html;
-}
-function openEdit(d){let x=getDay(d);document.getElementById('editDate').value=d;document.getElementById('editTitle').textContent='Modifier '+new Date(d+'T12:00:00').toLocaleDateString('fr-FR');for(let k of ['amStart','amEnd','pmStart','pmEnd'])document.getElementById(k).value=x[k]||'';document.getElementById('dayType').value=x.type||'work';document.getElementById('compHours').value=x.compHours||0;toggleComp();document.getElementById('editModal').classList.remove('hidden')}
-function closeEdit(){document.getElementById('editModal').classList.add('hidden')}
-function toggleComp(){document.getElementById('compHoursWrap').classList.toggle('hidden',document.getElementById('dayType').value!=='comp')}
-document.getElementById('dayType').addEventListener('change',toggleComp);
-function saveEdit(){let d=document.getElementById('editDate').value,x=getDay(d);for(let k of ['amStart','amEnd','pmStart','pmEnd'])x[k]=document.getElementById(k).value;x.type=document.getElementById('dayType').value;x.compHours=Number(document.getElementById('compHours').value||0);setDay(d,x);closeEdit();renderAll()}
-function csvCell(v){return '"'+String(v??'').replaceAll('"','""')+'"'}
-function exportCSV(){
- let from=document.getElementById('sumFrom').value||`${new Date().getFullYear()}-01-01`,to=document.getElementById('sumTo').value||todayISO(),rows=[['Date','Jour','Type','Début matin','Fin matin','Début après-midi','Fin journée','Heures travaillées','Repos compensatoire utilisé']];
- for(let d of rangeDates(from,to)){let x=getDay(d);if(new Date(d+'T12:00:00').getDay()===0||new Date(d+'T12:00:00').getDay()===6)continue;rows.push([d,new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long'}),x.type,x.amStart,x.amEnd,x.pmStart,x.pmEnd,fmtHours(workedMinutes(x)),x.compHours||0])}
- let csv='\uFEFF'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pointage_${from}_${to}.csv`;a.click();URL.revokeObjectURL(a.href)
-}
-function renderAll(){renderHome();if(!document.getElementById('history').classList.contains('hidden'))renderHistory();if(!document.getElementById('summary').classList.contains('hidden'))renderSummary()}
-document.getElementById('historyYear').value=new Date().getFullYear();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+const KEY="pointage-heures-data-v11";
+let data={}; try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){data={}};
+const pad=n=>String(n).padStart(2,"0");
+function iso(d){let x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10)}
+function today(){return iso(new Date())}
+function addDays(s,n){let d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)}
+function monday(s){let d=new Date(s+"T12:00:00"),day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1));return iso(d)}
+function weekDates(s){let m=monday(s);return Array.from({length:5},(_,i)=>addDays(m,i))}
+function range(a,b){let out=[];for(let d=a;d<=b;d=addDays(d,1))out.push(d);return out}
+function timeMin(s){if(!s)return null;let [h,m]=s.split(":").map(Number);return h*60+m}
+function fmtMin(min){min=Math.round(min||0);let sign=min<0?"-":"";min=Math.abs(min);return sign+Math.floor(min/60)+"h"+pad(min%60)}
+function day(d){return data[d]||{type:"work",amStart:"",amEnd:"",pmStart:"",pmEnd:"",compHours:0}}
+function put(d,x){data[d]=x;localStorage.setItem(KEY,JSON.stringify(data))}
+function worked(x){let a=timeMin(x.amStart),b=timeMin(x.amEnd),c=timeMin(x.pmStart),e=timeMin(x.pmEnd);return a!=null&&b!=null&&c!=null&&e!=null?(b-a)+(e-c):0}
+function weekInfo(start){let ds=weekDates(start),w=ds.reduce((s,d)=>s+worked(day(d)),0);return{start,end:addDays(start,4),worked:w,normal:Math.min(w,2100),extra:Math.max(0,w-2100)}}
+function isoWeekNumber(s){let d=new Date(s+"T12:00:00");d.setDate(d.getDate()+3-(d.getDay()+6)%7);let y=d.getFullYear(),w1=new Date(y,0,4);return 1+Math.round(((d-w1)/86400000-3+(w1.getDay()+6)%7)/7)}
+function typeLabel(t){return({work:"Travail",leave:"Congé",comp:"Repos compensatoire",absence:"Absence",holiday:"Jour férié"})[t]||t}
+function showTab(t){["home","history","summary"].forEach(x=>document.getElementById("tab"+x[0].toUpperCase()+x.slice(1)).classList.toggle("hidden",x!==t));if(t==="history")renderHistory();if(t==="summary")renderSummary()}
+function stamp(k){let d=today(),x=day(d);x.type="work";x[k]=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});put(d,x);renderAll()}
+function renderHome(){let d=today(),x=day(d),dt=new Date(d+"T12:00:00");document.getElementById("todayText").textContent=dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});document.getElementById("dateLabel").textContent=dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});document.getElementById("todayTimes").innerHTML=[["amStart","Début matin"],["amEnd","Fin matin"],["pmStart","Début après-midi"],["pmEnd","Fin journée"]].map(a=>`<div class="row"><span>${a[1]}</span><b>${x[a[0]]||"—"}</b></div>`).join("")+`<div style="text-align:right;margin-top:10px"><button onclick="openEdit('${d}')">✏️ Modifier</button></div>`;
+let wi=weekInfo(monday(d)),mi=monthInfo(dt.getFullYear(),dt.getMonth()+1);document.getElementById("weekLabel").textContent=`Semaine ${isoWeekNumber(wi.start)} · ${wi.start} au ${wi.end}`;document.getElementById("weekStats").innerHTML=stat("Travaillées",wi.worked)+stat("Normales",wi.normal)+stat("Sup.",wi.extra);document.getElementById("monthStats").innerHTML=stat("Travaillées",mi.worked)+stat("Sup.",mi.extra)+stat("Congés",mi.leave,"j")}
+function stat(label,value,suffix=""){return `<div class="stat"><b>${typeof value==="number"&&suffix!=="j"?fmtMin(value):value+suffix}</b><span class="muted">${label}</span></div>`}
+function monthInfo(y,m){let from=`${y}-${pad(m)}-01`,to=iso(new Date(y,m,0)),workedTotal=0,leave=0,absence=0,comp=0;for(let d of range(from,to)){let x=day(d);workedTotal+=worked(x);if(x.type==="leave")leave++;if(x.type==="absence")absence++;comp+=Number(x.compHours||0)}let extra=0,cur=monday(from);while(cur<=to){let wi=weekInfo(cur);if(wi.end>=from&&wi.end<=to)extra+=wi.extra;cur=addDays(cur,7)}return{worked:workedTotal,extra,normal:workedTotal-extra,leave,absence,comp}}
+function renderHistory(){let v=document.getElementById("historyMonth").value;if(!v){let d=new Date();v=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;document.getElementById("historyMonth").value=v}let [y,m]=v.split("-").map(Number),to=iso(new Date(y,m,0)),html="";for(let d of range(`${y}-${pad(m)}-01`,to)){let wd=new Date(d+"T12:00:00").getDay();if(wd===0||wd===6)continue;let x=day(d);html+=`<div class="row"><div><b>${new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"short",day:"2-digit",month:"2-digit"})}</b><div class="muted">${typeLabel(x.type)}</div></div><div style="text-align:right"><b>${fmtMin(worked(x))}</b><br><button onclick="openEdit('${d}')">Modifier</button></div></div>`}document.getElementById("historyList").innerHTML=html||"<p class='muted'>Aucune donnée.</p>"}
+function jumpToDate(){let d=document.getElementById("historyDate").value;if(!d)return;document.getElementById("historyMonth").value=d.slice(0,7);renderHistory();openEdit(d)}
+function renderSummary(){let d=new Date(),from=document.getElementById("sumFrom").value||`${d.getFullYear()}-01-01`,to=document.getElementById("sumTo").value||today();document.getElementById("sumFrom").value=from;document.getElementById("sumTo").value=to;let workedTotal=0,leave=0,absence=0,comp=0;for(let x of range(from,to)){let z=day(x);workedTotal+=worked(z);if(z.type==="leave")leave++;if(z.type==="absence")absence++;comp+=Number(z.compHours||0)}let weeks=[],cur=monday(from);while(cur<=to){weeks.push(weekInfo(cur));cur=addDays(cur,7)}let extra=weeks.reduce((s,w)=>s+w.extra,0);let h=`<div class="statgrid" style="margin-top:12px">${stat("Travaillées",workedTotal)}${stat("Heures sup.",extra)}${stat("Repos utilisé",comp*60)}</div><div style="margin-top:15px"><h3>Semaines</h3>`;for(let w of weeks)h+=`<div class="row"><span><b>S${isoWeekNumber(w.start)}</b> · ${w.start} → ${w.end}</span><b>${fmtMin(w.worked)} · ${fmtMin(w.extra)} sup.</b></div>`;h+=`</div><p class="muted">Congés : ${leave} jour(s) · Absences : ${absence} jour(s) · Repos compensatoire utilisé : ${comp} h</p>`;document.getElementById("summaryContent").innerHTML=h}
+function openEdit(d){let x=day(d);document.getElementById("editDate").value=d;document.getElementById("editDateLabel").textContent=new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});document.getElementById("eAmStart").value=x.amStart||"";document.getElementById("eAmEnd").value=x.amEnd||"";document.getElementById("ePmStart").value=x.pmStart||"";document.getElementById("ePmEnd").value=x.pmEnd||"";document.getElementById("eType").value=x.type||"work";document.getElementById("eComp").value=x.compHours||0;toggleComp();document.getElementById("editModal").classList.remove("hidden")}
+function closeEdit(){document.getElementById("editModal").classList.add("hidden")}
+document.getElementById("editModal").addEventListener("click",e=>{if(e.target.id==="editModal")closeEdit()});
+function toggleComp(){document.getElementById("compWrap").classList.toggle("hidden",document.getElementById("eType").value!=="comp")}
+function saveEdit(){let d=document.getElementById("editDate").value,x=day(d);x.amStart=document.getElementById("eAmStart").value;x.amEnd=document.getElementById("eAmEnd").value;x.pmStart=document.getElementById("ePmStart").value;x.pmEnd=document.getElementById("ePmEnd").value;x.type=document.getElementById("eType").value;x.compHours=Number(document.getElementById("eComp").value||0);put(d,x);closeEdit();renderAll()}
+function exportCSV(){let from=document.getElementById("sumFrom").value||`${new Date().getFullYear()}-01-01`,to=document.getElementById("sumTo").value||today(),rows=[["Date","Jour","Type","Début matin","Fin matin","Début après-midi","Fin journée","Heures travaillées","Repos compensatoire utilisé"]];for(let d of range(from,to)){let wd=new Date(d+"T12:00:00").getDay();if(wd===0||wd===6)continue;let x=day(d);rows.push([d,new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long"}),typeLabel(x.type),x.amStart,x.amEnd,x.pmStart,x.pmEnd,fmtMin(worked(x)),x.compHours||0])}let csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(";")).join("\r\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`pointage_${from}_${to}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportBackup(){let payload={app:"Pointage Heures",version:"1.1",exportedAt:new Date().toISOString(),data};let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download="sauvegarde-pointage.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function restoreBackup(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let p=JSON.parse(r.result);if(!p.data||typeof p.data!=="object")throw Error();data=p.data;localStorage.setItem(KEY,JSON.stringify(data));renderAll();alert("Sauvegarde restaurée.");}catch(err){alert("Cette sauvegarde n'est pas valide.")}};r.readAsText(f);e.target.value=""}
+function renderAll(){renderHome();if(!document.getElementById("tabHistory").classList.contains("hidden"))renderHistory();if(!document.getElementById("tabSummary").classList.contains("hidden"))renderSummary()}
 renderAll();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
-</body>
-</html>
+</body></html>
