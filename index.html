@@ -28,7 +28,7 @@ nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);
 </head>
 <body>
 <div class="app">
-<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.6.2</span></header>
+<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.6.3</span></header>
 
 <section id="tabHome">
 <div class="card"><h2>Pointage du jour</h2><div class="muted" id="dateLabel"></div>
@@ -67,7 +67,7 @@ nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);
 <script>
 const KEY="pointage-heures-data-v11"; // preserve V1.1 data
 let data={}; try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){data={}};
-let clipboardDay=null, clipboardWeek=null;
+let clipboardDay=null;
 const pad=n=>String(n).padStart(2,"0");
 function iso(d){let x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10)}
 function today(){return iso(new Date())}
@@ -119,8 +119,7 @@ function periodWeekExtra(start,from,to){
 
 function rowActions(d,x){return `<div class="actions"><button class="small" onclick="setType('${d}','leave')">🏖️ Congé</button><button class="small" onclick="setType('${d}','comp')">💤 Repos comp.</button><button class="small" onclick="setType('${d}','absence')">🚫 Absence</button><button class="small" onclick="setType('${d}','holiday')">🎉 Férié</button><button class="small" onclick="setType('${d}','work')">🕐 Travail</button><button class="small" onclick="copyDay('${d}')">📋 Copier horaires</button>${clipboardDay?`<button class="small primary" onclick="pasteDay('${d}')">📥 Coller horaires</button>`:""}<button class="small" onclick="openEdit('${d}')">✏️ Modifier</button></div>`}
 function renderHistory(){let v=document.getElementById("historyMonth").value;if(!v){let d=new Date();v=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;document.getElementById("historyMonth").value=v}let [y,m]=v.split("-").map(Number),from=`${y}-${pad(m)}-01`,to=iso(new Date(y,m,0));
-let firstMonday=monday(from), html=`<div class="weekbar"><button onclick="copyWeek('${firstMonday}')">📋 Copier cette semaine</button>${clipboardWeek?`<button class="primary" onclick="pasteWeek('${firstMonday}')">📥 Coller la semaine</button>`:""}</div>`;
-for(let d of range(from,to)){let wd=new Date(d+"T12:00:00").getDay();if(wd===0||wd===6)continue;let x=day(d),non=x.type!=="work",dt=new Date(d+"T12:00:00");html+=`<div class="dayrow ${non?"nonwork":""}"><div class="dayhead"><div><b>${dt.toLocaleDateString("fr-FR",{weekday:"long",day:"2-digit",month:"2-digit"})}</b><div style="margin-top:5px">${typePill(x.type)}</div></div><div style="text-align:right"><b>${worked(x)?fmtMin(worked(x)):"0h00"}</b></div></div><div class="times muted">${x.amStart||"—"} → ${x.amEnd||"—"} &nbsp;/&nbsp; ${x.pmStart||"—"} → ${x.pmEnd||"—"}</div>${rowActions(d,x)}</div>`}
+let html=``; for(let d of range(from,to)){let wd=new Date(d+"T12:00:00").getDay();if(wd===0||wd===6)continue;let x=day(d),non=x.type!=="work",dt=new Date(d+"T12:00:00");html+=`<div class="dayrow ${non?"nonwork":""}"><div class="dayhead"><div><b>${dt.toLocaleDateString("fr-FR",{weekday:"long",day:"2-digit",month:"2-digit"})}</b><div style="margin-top:5px">${typePill(x.type)}</div></div><div style="text-align:right"><b>${worked(x)?fmtMin(worked(x)):"0h00"}</b></div></div><div class="times muted">${x.amStart||"—"} → ${x.amEnd||"—"} &nbsp;/&nbsp; ${x.pmStart||"—"} → ${x.pmEnd||"—"}</div>${rowActions(d,x)}</div>`}
 document.getElementById("historyList").innerHTML=html||"<p class='muted'>Aucune donnée.</p>"}
 function jumpToDate(){let d=document.getElementById("historyDate").value;if(!d)return;document.getElementById("historyMonth").value=d.slice(0,7);renderHistory();openEdit(d)}
 function setType(d,type){
@@ -133,15 +132,8 @@ function setType(d,type){
 }
 function copyDay(d){let x=day(d);clipboardDay={amStart:x.amStart||"",amEnd:x.amEnd||"",pmStart:x.pmStart||"",pmEnd:x.pmEnd||""};renderHistory()}
 function pasteDay(d){if(!clipboardDay)return;let x=day(d);x.amStart=clipboardDay.amStart;x.amEnd=clipboardDay.amEnd;x.pmStart=clipboardDay.pmStart;x.pmEnd=clipboardDay.pmEnd;if(x.type!=="work")x.type="work";put(d,x);renderHistory();renderHome()}
-function copyWeek(start){clipboardWeek={};for(let i=0;i<5;i++){let d=addDays(start,i),x=day(d);clipboardWeek[i]={amStart:x.amStart||"",amEnd:x.amEnd||"",pmStart:x.pmStart||"",pmEnd:x.pmEnd||""}}renderHistory()}
-function pasteWeek(start){if(!clipboardWeek)return;for(let i=0;i<5;i++){let d=addDays(start,i),x=day(d);x.amStart=clipboardWeek[i].amStart;x.amEnd=clipboardWeek[i].amEnd;x.pmStart=clipboardWeek[i].pmStart;x.pmEnd=clipboardWeek[i].pmEnd;if(x.type==="work")put(d,x);else{ /* keep category of destination; paste only hours */ put(d,x) }}renderHistory();renderHome()}
-function removeSummaryCopyPaste(){
-  const root=document.getElementById("tabSummary");
-  if(!root)return;
-  root.querySelectorAll("button").forEach(b=>{
-    const t=(b.textContent||"").toLowerCase();
-    if(t.includes("copier")||t.includes("coller")) b.remove();
-  });
+}renderHistory();renderHome()}
+);
 }
 function renderSummary(){
   let d=new Date();
@@ -182,7 +174,6 @@ function renderSummary(){
   }
   h+=`</div>`;
   document.getElementById("summaryContent").innerHTML=h;
-  removeSummaryCopyPaste();
 }
 function openEdit(d){let x=day(d);document.getElementById("editDate").value=d;document.getElementById("editDateLabel").textContent=new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});document.getElementById("eAmStart").value=x.amStart||"";document.getElementById("eAmEnd").value=x.amEnd||"";document.getElementById("ePmStart").value=x.pmStart||"";document.getElementById("ePmEnd").value=x.pmEnd||"";document.getElementById("eType").value=x.type||"work";document.getElementById("eComp").value=x.compHours||0;toggleComp();document.getElementById("editModal").classList.remove("hidden")}
 function closeEdit(){document.getElementById("editModal").classList.add("hidden")}
