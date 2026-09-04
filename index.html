@@ -28,7 +28,7 @@ nav{position:sticky;bottom:10px;background:#ffffffeb;backdrop-filter:blur(10px);
 </head>
 <body>
 <div class="app">
-<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.3</span></header>
+<header><div><h1>Pointage Heures</h1><div class="muted" id="todayText"></div></div><span class="pill">v1.6-R</span></header>
 
 <section id="tabHome">
 <div class="card"><h2>Pointage du jour</h2><div class="muted" id="dateLabel"></div>
@@ -90,17 +90,17 @@ function renderHome(){let d=today(),x=day(d),dt=new Date(d+"T12:00:00");document
 let wi=weekInfo(monday(d)),mi=monthInfo(dt.getFullYear(),dt.getMonth()+1);document.getElementById("weekLabel").textContent=`Semaine ${isoWeekNumber(wi.start)} · ${wi.start} au ${wi.end}`;document.getElementById("weekStats").innerHTML=stat("Travaillées",wi.worked)+stat("Normales",wi.normal)+stat("Sup.",wi.extra);document.getElementById("monthStats").innerHTML=stat("Travaillées",mi.worked)+stat("Sup.",mi.extra)+stat("Congés",mi.leave,"j")}
 function stat(label,value,suffix=""){return `<div class="stat"><b>${suffix==="j"?value+suffix:fmtMin(value)}</b><span class="muted">${label}</span></div>`}
 function monthInfo(y,m){
-  const from=`${y}-${pad(m)}-01`, to=iso(new Date(y,m,0));
-  let workedTotal=0, leave=0, absence=0, comp=0, extra=0;
+  const from=`${y}-${pad(m)}-01`,to=iso(new Date(y,m,0));
+  let workedTotal=0,leave=0,absence=0,comp=0,extra=0;
   for(const d of range(from,to)){
     const x=day(d);
-    workedTotal += worked(x);
-    if(x.type==="leave") leave++;
-    if(x.type==="absence") absence++;
-    comp += Number(x.compHours||0);
+    workedTotal+=worked(x);
+    if(x.type==="leave")leave++;
+    if(x.type==="absence")absence++;
+    comp+=Number(x.compHours||0);
   }
   let cur=monday(from);
-  while(cur<=to){ extra += periodWeekExtra(cur,from,to); cur=addDays(cur,7); }
+  while(cur<=to){extra+=periodWeekExtra(cur,from,to);cur=addDays(cur,7);}
   return {worked:workedTotal,extra,normal:Math.max(0,workedTotal-extra),leave,absence,comp};
 }
 function periodWeekExtra(start,from,to){
@@ -111,11 +111,12 @@ function periodWeekExtra(start,from,to){
     const before=Math.max(0,cumulative-2100);
     const after=Math.max(0,cumulative+mins-2100);
     const dayExtra=Math.max(0,after-before);
-    if(d>=from && d<=to) extra+=dayExtra;
+    if(d>=from && d<=to)extra+=dayExtra;
     cumulative+=mins;
   }
   return extra;
 }
+
 function rowActions(d,x){return `<div class="actions"><button class="small" onclick="setType('${d}','leave')">🏖️ Congé</button><button class="small" onclick="setType('${d}','comp')">💤 Repos comp.</button><button class="small" onclick="setType('${d}','absence')">🚫 Absence</button><button class="small" onclick="setType('${d}','holiday')">🎉 Férié</button><button class="small" onclick="setType('${d}','work')">🕐 Travail</button><button class="small" onclick="copyDay('${d}')">📋 Copier horaires</button>${clipboardDay?`<button class="small primary" onclick="pasteDay('${d}')">📥 Coller horaires</button>`:""}<button class="small" onclick="openEdit('${d}')">✏️ Modifier</button></div>`}
 function renderHistory(){let v=document.getElementById("historyMonth").value;if(!v){let d=new Date();v=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;document.getElementById("historyMonth").value=v}let [y,m]=v.split("-").map(Number),from=`${y}-${pad(m)}-01`,to=iso(new Date(y,m,0));
 let firstMonday=monday(from), html=`<div class="weekbar"><button onclick="copyWeek('${firstMonday}')">📋 Copier cette semaine</button>${clipboardWeek?`<button class="primary" onclick="pasteWeek('${firstMonday}')">📥 Coller la semaine</button>`:""}</div>`;
@@ -145,8 +146,8 @@ function renderSummary(){
   for(const x of range(from,to)){
     const z=day(x);
     workedTotal+=worked(z);
-    if(z.type==="leave") leave++;
-    if(z.type==="absence") absence++;
+    if(z.type==="leave")leave++;
+    if(z.type==="absence")absence++;
     comp+=Number(z.compHours||0);
   }
 
@@ -168,7 +169,6 @@ function renderSummary(){
     <div class="stat"><b>${leave} j</b><span class="muted">Congés pris</span></div>
     ${stat("Repos utilisé",comp*60)}
   </div><div style="margin-top:15px"><h3>Semaines</h3>`;
-
   for(const w of weeks){
     h+=`<div class="row"><span><b>S${isoWeekNumber(w.start)}</b> · ${w.start} → ${w.end}</span><b>${fmtMin(w.worked)} · ${fmtMin(w.extra)} sup.</b></div>`;
   }
@@ -181,7 +181,7 @@ document.getElementById("editModal").addEventListener("click",e=>{if(e.target.id
 function toggleComp(){document.getElementById("compWrap").classList.toggle("hidden",document.getElementById("eType").value!=="comp")}
 function saveEdit(){let d=document.getElementById("editDate").value,x=day(d);x.amStart=document.getElementById("eAmStart").value;x.amEnd=document.getElementById("eAmEnd").value;x.pmStart=document.getElementById("ePmStart").value;x.pmEnd=document.getElementById("ePmEnd").value;x.type=document.getElementById("eType").value;x.compHours=Number(document.getElementById("eComp").value||0);put(d,x);closeEdit();renderAll()}
 function exportCSV(){let from=document.getElementById("sumFrom").value||`${new Date().getFullYear()}-01-01`,to=document.getElementById("sumTo").value||today(),rows=[["Date","Jour","Type","Début matin","Fin matin","Début après-midi","Fin journée","Heures travaillées","Repos compensatoire utilisé"]];for(let d of range(from,to)){let wd=new Date(d+"T12:00:00").getDay();if(wd===0||wd===6)continue;let x=day(d);rows.push([d,new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long"}),typeLabel(x.type),x.amStart,x.amEnd,x.pmStart,x.pmEnd,fmtMin(worked(x)),x.compHours||0])}let csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(";")).join("\r\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`pointage_${from}_${to}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function exportBackup(){let payload={app:"Pointage Heures",version:"1.5",exportedAt:new Date().toISOString(),data};let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download="sauvegarde-pointage.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportBackup(){let payload={app:"Pointage Heures",version:"1.3",exportedAt:new Date().toISOString(),data};let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download="sauvegarde-pointage.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function restoreBackup(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let p=JSON.parse(r.result);if(!p.data||typeof p.data!=="object")throw Error();data=p.data;localStorage.setItem(KEY,JSON.stringify(data));renderAll();alert("Sauvegarde restaurée.");}catch(err){alert("Cette sauvegarde n'est pas valide.")}};r.readAsText(f);e.target.value=""}
 function renderAll(){renderHome();if(!document.getElementById("tabHistory").classList.contains("hidden"))renderHistory();if(!document.getElementById("tabSummary").classList.contains("hidden"))renderSummary()}
 renderAll();
